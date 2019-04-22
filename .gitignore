@@ -1,0 +1,61 @@
+*.class
+*.iml
+.idea/
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+
+
+# CSV Files #
+*.csv 
+
+# ZIP Files #
+*.zip
+*.log
+*.txt
+
+.DS_Store
+.metadata/
+.recommenders/
+**/*.tern-project
+
+
+
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+
+# CSV file #
+*.csv
+**/*.zip
+# Ignore Eclipse maintained files
+.classpath
+.project
+.settings/
+
+data/
+bin/
+Servers/
+doc/
+
+.generatorignore
+project/target/*
+project/project/target/*
+project/build/target/*
+project/boot/*
+project/plugins/lib_managed/*
+project/plugins/project/*
+project/plugins/target/*
+project/plugins/src_managed/*
+pay-platform/src/main/webapp/WEB-INF/classes/cfg.properties

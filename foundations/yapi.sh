@@ -3,8 +3,8 @@
 #$1 是传递给该shell脚本的第一个参数，即删除容器的判断依据
 #$2 是传递给该shell脚本的第二个参数，即镜像容器的判断依据
 
-image_name="mysql:5.7"
-image_alias="mysql"
+image_name="anoy/yapi"
+image_alias="yapi"
 container_exist=$(docker ps -a | grep $image_name)
 sub_image_name=${image_name%:*}
 # 准确查找镜像是否已经存在
@@ -12,7 +12,7 @@ image_exist=$(docker images --all | grep -w ^$sub_image_name)
 
 if [ -z "$image_exist" ]; then
     echo "检查镜像[${image_exist}]不存在，初始化命令：docker pull ${image_name}"
-    docker pull ${image_name}
+    docker pull registry.cn-hangzhou.aliyuncs.com/${image_name}
 else
     if [[ -z "$2" ]]; then
         echo "检查镜像[${image_name}]已存在，不需要拉取镜像"
@@ -24,8 +24,9 @@ fi
 
 # 判断应用是否存在，不存在则执行初始化脚本
 if [ -z "$container_exist" ]; then
-    echo "检查容器[${image_name}]不存在，初始化命令：docker run -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root --name ${image_alias} ${image_name}"
-    docker run -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root --name ${image_alias} ${image_name}
+    echo "检查容器[${image_name}]不存在，初始化命令：docker run -p 3000:3000 --name ${image_alias} ${image_name}"
+    docker run -it --rm --link mongo:mongo --entrypoint npm --workdir /api/vendors registry.cn-hangzhou.aliyuncs.com/${image_name} run install-server
+    docker run -d --name yapi --link mongo:mongo --workdir /api/vendors -p 3000:3000 registry.cn-hangzhou.aliyuncs.com/${image_name} server/app.js
 else
     if [[ -z "$1" ]]; then
         echo "检查容器[${image_name}]已存在，不需要初始化容器"

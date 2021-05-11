@@ -3,8 +3,8 @@
 #$1 是传递给该shell脚本的第一个参数，即删除容器的判断依据
 #$2 是传递给该shell脚本的第二个参数，即镜像容器的判断依据
 
-image_name="mysql:5.7.25"
-image_alias="mysql"
+image_name="redis:latest"
+image_alias="redis"
 container_exist=$(docker ps -a | grep $image_name)
 sub_image_name=${image_name%:*}
 if [ "$(uname)" == "Darwin" ];then
@@ -33,13 +33,13 @@ function check_image(){
 function check_container(){
     # 判断应用是否存在，不存在则执行初始化脚本
     if [ -z "$container_exist" ]; then
-        echo "\n3、检查容器[${image_name}]不存在，初始化命令：docker run -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root --name -v=${path}/conf/:/etc/mysql/conf.d/ -v=${path}/data:/var/lib/mysql ${image_alias} ${image_name}"
-		docker run -d -p 3306:3306 \
-    -d --restart=always \
-		--privileged=true -e MYSQL_ROOT_PASSWORD=root \
-		-v=${path}/conf/:/etc/mysql/conf.d/ \
-		-v=${path}/data:/var/lib/mysql \
-		--name ${image_alias} ${image_name}
+        echo "\n3、检查容器[${image_name}]不存在，初始化命令：docker run -d -p 6379:6379 -v=${path}/redis.conf:/etc/redis/redis.conf -v=${path}/data:/data --requirepass 'redis' --name ${image_alias} ${image_name} redis-server /etc/redis/redis.conf --appendonly yes"
+		docker run -d -p 6379:6379 --name ${image_alias} ${image_name} \
+    -v=${path}/redis.conf:/etc/redis/redis.conf -v=${path}/data:/data  \
+    --requirepass redis \
+    redis-server /etc/redis/redis.conf --appendonly yes
+
+    
     else
         if [[ -z "$1" ]]; then
             echo "\n3、检查容器[${image_name}]已存在，不需要初始化容器"
@@ -71,46 +71,15 @@ function checkt_container_status (){
 function mkdir_folder() {
     #这里的-d 参数判断$path是否存在 
     if [ ! -d $path ];then
-		echo "\n2、创建文件夹，执行命令：sudo mkdir -p -v $path/{data,config} && sudo chown -R $current_name $path/{data,conf}" 
+		echo "\n2、创建文件夹，执行命令：sudo mkdir -p -v $path/{data,conf} && sudo chown -R $current_name $path/{data,conf}" 
 		if [ "$(uname)" == "Darwin" ];then
-			sudo mkdir -p -v $path/{data,conf} && sudo chown -R $current_name $path/{data,conf} && write_mysql_config
+			sudo mkdir -p -v $path/{data,conf} && sudo chown -R $current_name $path/{data,conf} 
 		elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ];then    
-			mkdir -p -v $path/{data,conf} && write_mysql_config
+			mkdir -p -v $path/{data,conf} 
 		fi
     else
         echo "\n2、文件夹["${path}"]已经存在"
     fi
-}
-
-# 将MySQL配置，写到my.conf中
-function write_mysql_config() {
-    file_name="${path}/conf/my.cnf"
-    if [ -f $file_name ]; then
-        echo "\n2.1、文件已存在["$file_name"]"
-        return 0
-    else
-        touch $file_name
-        echo "\n2.1、创建文件my.cnf并将配置写到文件中["$file_name"]"
-        cat >$file_name <<EOF
-# Default MySQL server config
-[mysqld]
-character-set-server=utf8
-explicit_defaults_for_timestamp = 1
-bulk_insert_buffer_size=120M
-max_allowed_packet = 100M
-
-[client]
-default-character-set=utf8
-
-[mysql]
-default-character-set=utf8
-
-# Only allow connections from localhost
-bind-address = 127.0.0.1
-EOF
-        cat $file_name
-    fi
-    return 0
 }
 
 

@@ -3,8 +3,8 @@
 #$1 是传递给该shell脚本的第一个参数，即删除容器的判断依据
 #$2 是传递给该shell脚本的第二个参数，即镜像容器的判断依据
 
-image_name="mysql:5.7.25"
-image_alias="mysql"
+image_name="alfresco/alfresco-content-repository-community"
+image_alias="alfresco"
 container_exist=$(docker ps -a | grep $image_name)
 sub_image_name=${image_name%:*}
 if [ "$(uname)" == "Darwin" ];then
@@ -33,13 +33,8 @@ function check_image(){
 function check_container(){
     # 判断应用是否存在，不存在则执行初始化脚本
     if [ -z "$container_exist" ]; then
-        echo "\n3、检查容器[${image_name}]不存在，初始化命令：docker run -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root --name -v=${path}/conf/:/etc/mysql/conf.d/ -v=${path}/data:/var/lib/mysql ${image_alias} ${image_name}"
-		docker run -d -p 3306:3306 \
-    -d --restart=always \
-		--privileged=true -e MYSQL_ROOT_PASSWORD=root \
-		-v=${path}/conf/:/etc/mysql/conf.d/ \
-		-v=${path}/data:/var/lib/mysql \
-		--name ${image_alias} ${image_name}
+        echo "\n3、检查容器[${image_name}]不存在，初始化命令：docker run -d --privileged=true --name ${image_alias} ${image_name}"
+		    docker run -d --privileged=true --name ${image_alias} ${image_name}
     else
         if [[ -z "$1" ]]; then
             echo "\n3、检查容器[${image_name}]已存在，不需要初始化容器"
@@ -96,12 +91,8 @@ function write_mysql_config() {
 [mysqld]
 character-set-server=utf8
 explicit_defaults_for_timestamp = 1
-bulk_insert_buffer_size=120M
-max_allowed_packet = 100M
-
 [client]
 default-character-set=utf8
-
 [mysql]
 default-character-set=utf8
 
@@ -116,7 +107,6 @@ EOF
 
 echo "---------------函数开始执行---------------"
 check_image $1 $2
-mkdir_folder
 check_container $1
 checkt_container_status
 echo "---------------函数执行完毕---------------"

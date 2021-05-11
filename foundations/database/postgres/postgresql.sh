@@ -3,7 +3,7 @@
 #$1 是传递给该shell脚本的第一个参数，即删除容器的判断依据
 #$2 是传递给该shell脚本的第二个参数，即镜像容器的判断依据
 
-image_name="postgres:latest"
+image_name="postgres:11.5"
 image_alias="postgresql"
 container_exist=$(docker ps -a | grep $image_name)
 sub_image_name=${image_name%:*}
@@ -30,11 +30,11 @@ function check_container(){
     # 判断应用是否存在，不存在则执行初始化脚本
     if [ -z "$container_exist" ]; then
         mkdir_folder
-        echo "\n3、检查容器[${image_name}]不存在，初始化命令：docker run -d -p 5432:5432 -e 'POSTGRES_PASSWORD=postgres' -e 'POSTGRES_DB=postgres' -e 'PGDATA=/var/lib/postgresql/data/pgdata' -v ${path}/data:/var/lib/postgresql/data -v ${path}/log:/var/log --name ${image_alias} ${image_name}"
+        echo "\n3、检查容器[${image_name}]不存在，初始化命令：docker run -d -p 5432:5432 -e 'POSTGRES_PASSWORD=postgres' -e 'POSTGRES_DB=postgres' -v ${path}/data:/var/lib/postgresql/data -v ${path}/log:/var/log --name ${image_alias} ${image_name}"
         docker run -d -p 5432:5432 \
+        -d --restart=always \
         -e 'POSTGRES_PASSWORD=postgres' \
         -e 'POSTGRES_DB=postgres' \
-        -e 'PGDATA=/var/lib/postgresql/data/pgdata' \
         -v ${path}/data:/var/lib/postgresql/data \
         -v ${path}/log:/var/log \
         --name ${image_alias} ${image_name}

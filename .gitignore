@@ -1,61 +1,35 @@
-*.class
-*.iml
-.idea/
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
-*.jar
-*.war
-*.ear
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
-hs_err_pid*
-
-
-# CSV Files #
-*.csv 
-
-# ZIP Files #
-*.zip
-*.log
-*.txt
-
-.DS_Store
-.metadata/
-.recommenders/
-**/*.tern-project
-
-
-
+HELP.md
 target/
-pom.xml.tag
-pom.xml.releaseBackup
-pom.xml.versionsBackup
-pom.xml.next
-release.properties
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+.DS_Store
 
-# CSV file #
-*.csv
-**/*.zip
-# Ignore Eclipse maintained files
+### STS ###
+.apt_generated
 .classpath
+.factorypath
 .project
-.settings/
+.settings
+.springBeans
+.sts4-cache
 
-data/
-bin/
-Servers/
-doc/
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
 
-.generatorignore
-project/target/*
-project/project/target/*
-project/build/target/*
-project/boot/*
-project/plugins/lib_managed/*
-project/plugins/project/*
-project/plugins/target/*
-project/plugins/src_managed/*
-pay-platform/src/main/webapp/WEB-INF/classes/cfg.properties
+### NetBeans ###
+/nbproject/private/
+/nbbuild/
+/dist/
+/nbdist/
+/.nb-gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### VS Code ###
+.vscode/
+venv

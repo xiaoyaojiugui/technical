@@ -3,18 +3,19 @@
 #$1 是传递给该shell脚本的第一个参数，即删除容器的判断依据
 #$2 是传递给该shell脚本的第二个参数，即镜像容器的判断依据
 
+current_name="$USER"
 image_name="mysql:5.7.25"
 image_alias="mysql"
 container_exist=$(docker ps -a | grep $image_name)
 sub_image_name=${image_name%:*}
 if [ "$(uname)" == "Darwin" ];then
-	path=/data/docker/volumes/${image_alias}
+	path=/Users/${current_name}/data/docker/volumes/${image_alias}
 elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ];then
 	path=d:/docker/volumes/${image_alias}
 fi
 # 准确查找镜像是否已经存在
 image_exist=$(docker images --all | grep -w ^$sub_image_name)
-current_name="$USER"
+
 
 function check_image(){
     if [ -z "$image_exist" ]; then
@@ -71,9 +72,9 @@ function checkt_container_status (){
 function mkdir_folder() {
     #这里的-d 参数判断$path是否存在 
     if [ ! -d $path ];then
-		echo "\n2、创建文件夹，执行命令：sudo mkdir -p -v $path/{data,config} && sudo chown -R $current_name $path/{data,conf}" 
+		echo "\n2、创建文件夹，执行命令：sudo mkdir -p -v $path/{data,config} && sudo chown -R ${current_name} $path/{data,conf}" 
 		if [ "$(uname)" == "Darwin" ];then
-			sudo mkdir -p -v $path/{data,conf} && sudo chown -R $current_name $path/{data,conf} && write_mysql_config
+			sudo mkdir -p -v $path/{data,conf} && sudo chown -R ${current_name} $path/{data,conf} && write_mysql_config
 		elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ];then    
 			mkdir -p -v $path/{data,conf} && write_mysql_config
 		fi

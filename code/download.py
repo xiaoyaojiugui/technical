@@ -64,7 +64,7 @@ async def main():
     }''')
 
     await page.pdf({
-        "path": "/data/laozhao/2021-09-16-黑天鹅突袭，大牛股惨遭股债双杀.pdf",
+        "path": "~/data/laozhao/2021-09-16-黑天鹅突袭，大牛股惨遭股债双杀.pdf",
         "format": 'A4'})
 
     await browser.close()

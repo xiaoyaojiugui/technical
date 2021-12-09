@@ -29,34 +29,34 @@ function check_image(){
 function check_container(){
     # 判断应用是否存在，不存在则执行初始化脚本
     if [ -z "$container_exist" ]; then
-        echo "\n3、检查容器[${image_name}]不存在，初始化命令：docker run -p 8000:8000  --name ${image_alias} -d ${image_name}"
+        echo "3、检查容器[${image_name}]不存在，初始化命令：docker run -p 8000:8000  --name ${image_alias} -d ${image_name}"
         docker run -p 8000:8000 -p 3000:3000  --name ${image_alias} -d ${image_name}
     else
         if [[ -z "$1" ]]; then
-            echo "\n3、检查容器[${image_name}]已存在，不需要初始化容器"
+            echo "3、检查容器[${image_name}]已存在，不需要初始化容器"
         else
-            echo "\n3、删除容器[${image_name}]，该操作用于环境调试"
+            echo "3、删除容器[${image_name}]，该操作用于环境调试"
             docker stop $image_alias && docker rm $image_alias
-            echo "\n3.2、删除容器[${image_name}]成功" && exit 1
+            echo "3.2、删除容器[${image_name}]成功" && exit 1
         fi
     fi
 }
 
 function checkt_container_status (){
-    echo "\n4、查看容器[${image_name}]状态，执行命令：docker inspect $image_alias | jq -r '.[].State.Status'"
+    echo "4、查看容器[${image_name}]状态，执行命令：docker inspect $image_alias | jq -r '.[].State.Status'"
     status=$(docker inspect $image_alias | jq -r '.[].State.Status')
 
     if [ "$status" == "running" ]; then
-        echo "\n5、查看容器[${image_name}]状态：[$status]"
+        echo "5、查看容器[${image_name}]状态：[$status]"
     elif [ "$status" == "exited" ]; then
-        echo "\n5、查看容器[${image_name}]状态：[$status]，启动命令：docker start $image_alias"
+        echo "5、查看容器[${image_name}]状态：[$status]，启动命令：docker start $image_alias"
         docker start $image_alias
     else
-        echo "\n5、查看容器[${image_name}]状态：[$status]，存在异常"
+        echo "5、查看容器[${image_name}]状态：[$status]，存在异常"
         exit 1 #强制退出，不执行后续步骤
     fi
 
-    echo "\n6、查看容器[${image_name}]详情，执行命令：docker ps | grep ${image_name}"
+    echo "6、查看容器[${image_name}]详情，执行命令：docker ps | grep ${image_name}"
     docker ps | grep $image_name
 }
 

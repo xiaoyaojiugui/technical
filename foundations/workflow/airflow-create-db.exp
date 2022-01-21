@@ -1,0 +1,33 @@
+#!/usr/bin/expect -f
+
+# 用户名称(username)；密码(password)；关键字(ipAddress)；
+set timeout 3
+set username root
+set password root
+set ip_address [lindex $argv 0]
+set mysql_image_alias  [lindex $argv 1]
+
+if { "${ip_address}" == "" || "${mysql_image_alias}" == "" } {
+    send_user "\[MySQL的IP地址\]或\[MySQL的别名\]为空，不执行操作...."
+} else {
+    # 连接命令
+    spawn docker exec -it ${mysql_image_alias} mysql -u${username} -p${password}
+    #1、新建名字为<airflow>的数据库
+    expect "mysql>" { send "CREATE DATABASE IF NOT EXISTS airflow;\r" }
+    #2、新建用户`airflow`，密码为`airflow`, 该用户对数据库`airflow`有完全操作权限
+    expect "mysql>" { send "GRANT all privileges on airflow.* TO 'airflow'@'${ip_address}'  IDENTIFIED BY 'airflow';\r" }
+    #3、更新权限
+    expect "mysql>" { send "FLUSH PRIVILEGES;\r" }
+    #4、查看授权（常用操作指令可不执行）
+    expect "mysql>" { send "select host,user from mysql.user where user='airflow';\r" }
+    #5、退出
+    expect "mysql>" { send "exit\r" }
+    #6、删除命令：DROP USER 'airflow'@'172.17.0.4';
+}  
+exit
+#interact
+
+
+
+
+

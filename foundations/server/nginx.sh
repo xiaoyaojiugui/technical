@@ -11,21 +11,21 @@ sub_image_name=${image_name%:*}
 # 准确查找镜像是否已经存在
 image_exist=$(docker images --all | grep -w ^$sub_image_name)
 
-function get_os_path(){
-    if [ "$(uname)" == "Darwin" ];then
+function get_os_path() {
+    if [ "$(uname)" == "Darwin" ]; then
         path=/Users/${current_name}/data/docker/volumes/${image_alias}
-        elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ];then
+    elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
         path=d:/docker/volumes/${image_alias}
-        elif [ "$(expr substr $(uname -s) 1 10)" == "Linux" ];then
+    elif [ "$(expr substr $(uname -s) 1 10)" == "Linux" ]; then
         path=/home/${current_name}/data/docker/volumes/${image_alias}
     fi
 }
 
-function check_image(){
+function check_image() {
     if [[ -n "$2" && -n "$1" ]]; then
         echo "1、删除镜像[${image_name}]，该操作用于环境调试"
         docker stop ${image_alias} && docker rm ${image_alias} && docker rmi ${image_name} && exit 1
-        elif [[ -n "$1" ]]; then
+    elif [[ -n "$1" ]]; then
         echo "1、镜像[${image_name}]，不执行操作"
     else
         if [ -z "${image_exist}" ]; then
@@ -37,7 +37,7 @@ function check_image(){
     fi
 }
 
-function check_container(){
+function check_container() {
     if [[ -n "$1" ]]; then
         echo "2、删除容器[${image_name}]，执行命令：docker stop ${image_alias} && docker rm ${image_alias}"
         docker stop ${image_alias} && docker rm -f ${image_alias}
@@ -58,14 +58,14 @@ function create_foler() {
         echo "3、成功删除文件夹[${path}]" && exit 1
     else
         #这里的-d 参数判断${path}是否存在
-        if [[ -d ${path} ]];then
+        if [ -d ${path} ]; then
             echo "3、文件夹["${path}"]已经存在"
         else
-            echo "3、创建文件夹，执行命令：sudo mkdir -p -v ${path}/{html,log} "
-            if [[ "$(uname)" == "Darwin" || "$(expr substr $(uname -s) 1 10)" == "Linux" ]];then
-                sudo mkdir -p -v ${path}/{html,log}
-                elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ];then
-                mkdir -p -v ${path}/{html,log}
+            echo "3、创建文件夹，执行命令：sudo mkdir -p -v ${path}/{html,log,conf} "
+            if [[ "$(uname)" == "Darwin" || "$(expr substr $(uname -s) 1 10)" == "Linux" ]]; then
+                sudo mkdir -p -v ${path}/{html,log,conf}
+            elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
+                mkdir -p -v ${path}/{html,log,conf}
             fi
         fi
     fi
@@ -76,22 +76,32 @@ function create_file() {
     if [[ -n "$1" ]]; then
         echo "4、删除文件[${path}]，不执行操作"
     else
-        if [ -z "$container_exist" ]; then
-            file_name="${path}/nginx.conf"
-            if [[ -f ${file_name} ]]; then
-                echo "4、文件已存在["${file_name}"]"
-            else
-                echo "4、拷贝 nginx.conf 到指定目录[${path}]，执行命令：sudo docker cp $(docker ps -a | grep ${image_alias} |awk '{print $1}'):/etc/nginx/nginx.conf ${path}"
-                sudo docker cp $(docker ps -a | grep ${image_alias} |awk '{print $1}'):/etc/nginx/nginx.conf ${path}
+        if [ -z "${container_exist}" ]; then
+            nginx_file_name="${path}/conf/nginx.conf"
+            if [ ! -f ${nginx_file_name} ]; then
+                echo "4、文件已存在["${nginx_file_name}"]"
+                echo "4、拷贝 nginx.conf 到指定目录[${path}/conf]，执行命令：sudo docker cp $(docker ps -a | grep ${image_alias} | awk '{print $1}'):/etc/nginx/nginx.conf ${path}"
+                sudo docker cp $(docker ps -a | grep ${image_alias} | awk '{print $1}'):/etc/nginx/nginx.conf ${path}/conf
+                sudo docker cp $(docker ps -a | grep ${image_alias} | awk '{print $1}'):/etc/nginx/conf.d/default.conf ${path}/conf
+            fi
+            echo "4.1、对目录授权[${path}]"
+            current_group=$(groups ${current_name} | awk '{print $1}')
+            sudo chown -R ${current_name}:${current_group} ${path}
+
+            html_file_name="${path}/html/index.html"
+            if [ ! -f ${html_file_name} ]; then
+                touch ${html_file_name}
+                echo "4.2、创建文件 index.html 并入内容 ["${html_file_name}"]"
+                cat >${html_file_name} <<EOF
+Welcome to nginx !!!!!
+EOF
+                cat ${html_file_name}
             fi
         fi
     fi
-    echo "4.1、对目录授权[${path}]"
-    current_group=`groups ${current_name} | awk '{print $1}'`
-    sudo chown -R ${current_name}:${current_group} ${path}
 }
 
-function reset_container(){
+function reset_container() {
     if [[ -n "$1" ]]; then
         echo "5、删除容器[${image_name}]，该操作用于环境调试"
         docker stop ${image_alias} && docker rm ${image_alias}
@@ -100,32 +110,32 @@ function reset_container(){
         # 判断应用是否存在，不存在则执行初始化脚本
         if [ -z "${container_exist}" ]; then
             echo "5、删除旧容器[${image_name}]创建新容器"
-            exe_status=`docker stop ${image_alias} && docker rm -f ${image_alias}`
+            exe_status=$(docker stop ${image_alias} && docker rm -f ${image_alias})
             if [[ -n "${exe_status}" ]]; then
                 echo "5.1、重新初始化容器[${image_name}]，执行命令：docker run -d -p 80:80 -d --restart=always -v ${path}/html:/usr/share/nginx/html -v ${path}/log:/var/log/nginx -v ${path}/nginx.conf:/etc/nginx/nginx.conf --name ${image_alias} ${image_name}"
-                docker run -d -p 80:80 -d --restart=always \
-                -v ${path}/html:/usr/share/nginx/html \
-                -v ${path}/log:/var/log/nginx \
-                -v ${path}/nginx.conf:/etc/nginx/nginx.conf \
-                --name ${image_alias} ${image_name}
+                docker run -d -p 80:80 -d \
+                    -v ${path}/html:/usr/share/nginx/html \
+                    -v ${path}/log:/var/log/nginx \
+                    -v ${path}/conf/nginx.conf:/etc/nginx/nginx.conf \
+                    --name ${image_alias} ${image_name}
             fi
         fi
     fi
 }
 
-function checkt_container_status (){
+function checkt_container_status() {
     echo "6、查看容器[${image_name}]状态，执行命令：docker inspect --format='{{.State.Status}}' ${image_alias}"
     status=$(docker inspect --format='{{.State.Status}}' ${image_alias})
     if [ "${status}" == "running" ]; then
         echo "7、查看容器[${image_name}]状态：[${status}]"
-        elif [ "${status}" == "exited" ]; then
+    elif [ "${status}" == "exited" ]; then
         echo "7、查看容器[${image_name}]状态：[${status}]，启动命令：docker start ${image_alias}"
         docker start ${image_alias}
     else
         echo "7、查看容器[${image_name}]状态：[${status}]，存在异常"
         exit 1 #强制退出，不执行后续步骤
     fi
-    
+
     echo "8、查看容器[${image_name}]详情，执行命令：docker ps | grep ${image_name}"
     docker ps | grep ${image_name}
 }

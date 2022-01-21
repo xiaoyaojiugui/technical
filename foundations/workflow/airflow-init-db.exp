@@ -1,0 +1,32 @@
+#!/usr/bin/expect -f
+
+# 用户名称(username)；密码(password)；关键字(ipAddress)；
+set timeout 6
+set airflow_image_alias  [lindex $argv 0]
+set airflow_key  [lindex $argv 1]
+
+if { "${airflow_image_alias}" == "" } {
+    send_user "\[airflow\]镜像的别名不能为空，不执行操作...."
+} else {
+    # 连接命令
+    spawn docker exec -it ${airflow_image_alias} /bin/bash
+    #1、数据库重置命令
+    # expect "airflow@" { send "airflow reset\r" }
+    #2、设置环境变量
+    expect "airflow@" { send "export AIRFLOW__CORE__FERNET_KEY=${airflow_key}\r" }
+    # 获取 AIRFLOW__CORE__FERNET_KEY 命令
+    send_user "python -c 'from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())') \n"
+    #3、查看环境变量是否设置成功 
+    expect "airflow@" { send "echo \$AIRFLOW__CORE__FERNET_KEY \r" }
+    #4、初始化数据库命令
+    expect "airflow@" { send "airflow initdb \r" }
+    #5、退出
+    expect "airflow@" { send "exit\r" }
+}  
+
+interact
+
+
+
+
+

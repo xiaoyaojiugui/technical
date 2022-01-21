@@ -12,6 +12,16 @@ path=/data/docker/volumes/${image_alias}
 image_exist=$(docker images --all | grep -w ^$sub_image_name)
 current_name="$USER"
 
+function get_os_path(){
+    if [ "$(uname)" == "Darwin" ];then
+        path=/Users/${current_name}/data/docker/volumes/${image_alias}
+        elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ];then
+        path=d:/docker/volumes/${image_alias}
+        elif [ "$(expr substr $(uname -s) 1 10)" == "Linux" ];then
+        path=/home/${current_name}/data/docker/volumes/${image_alias}
+    fi
+}
+
 function check_image(){
     if [ -z "$image_exist" ]; then
         echo "1、检查镜像[${image_exist}]不存在，初始化命令：docker pull ${image_name}"
@@ -87,6 +97,7 @@ function delete_images_folder() {
 
 
 echo "---------------函数开始执行---------------"
+get_os_path
 check_image $1 $2
 check_container $1
 checkt_container_status

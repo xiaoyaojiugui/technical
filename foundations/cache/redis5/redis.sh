@@ -96,11 +96,11 @@ function download_redis_conf(){
         wget -P ${path}/conf/ https://github.com/xiaoyaojiugui/docker/blob/master/foundations/cache/redis5/redis.conf
     echo "3.2、修改：protected-mode yes = protected-mode no"
         $(sudo sed -i \"\" 's/protected-mode yes/protected-mode no/g' ${path}/conf/redis.conf)
-        $(sudo sed -i \"\" 's/\# requirepass foobared/requirepass 123456/g' ${path}/conf/redis.conf)
+        $(sudo sed -i \"\" 's/\# requirepass foobared/requirepass invtaccrdspvvd/g' ${path}/conf/redis.conf)
         $(sudo sed -i \"\" 's/bind 127.0.0.1/\# bind 127.0.0.1/g' ${path}/conf/redis.conf)
     echo "3.3、查看更新是否修改成功"
         cat ${path}/conf/redis.conf | grep 'protected-mode '
-        cat ${path}/conf/redis.conf | grep 'requirepass 123456'
+        cat ${path}/conf/redis.conf | grep 'requirepass leisure123456'
         cat ${path}/conf/redis.conf | grep 'bind 127.0.0.1'
 }
 

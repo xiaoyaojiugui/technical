@@ -68,41 +68,15 @@ function mkdir_folder() {
     if [ ! -d $path ];then
 		echo "2、创建文件夹，执行命令：sudo mkdir -p -v $path/{data,config} && sudo chown -R $current_name $path/{data,conf}" 
 		if [ "$(uname)" == "Darwin" ];then
-			sudo mkdir -p -v $path/{data,conf} && sudo chown -R $current_name $path/{data,conf} && write_mysql_config
+			sudo mkdir -p -v $path/{data,conf} && sudo chown -R $current_name $path/{data,conf} 
 		elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ];then    
-			mkdir -p -v $path/{data,conf} && write_mysql_config
+			mkdir -p -v $path/{data,conf} 
 		fi
     else
         echo "2、文件夹["${path}"]已经存在"
     fi
 }
 
-# 将MySQL配置，写到my.conf中
-function write_mysql_config() {
-    file_name="${path}/conf/my.cnf"
-    if [ -f $file_name ]; then
-        echo "2.1、文件已存在["$file_name"]"
-        return 0
-    else
-        touch $file_name
-        echo "2.1、创建文件my.cnf并将配置写到文件中["$file_name"]"
-        cat >$file_name <<EOF
-# Default MySQL server config
-[mysqld]
-character-set-server=utf8
-explicit_defaults_for_timestamp = 1
-[client]
-default-character-set=utf8
-[mysql]
-default-character-set=utf8
-
-# Only allow connections from localhost
-bind-address = 127.0.0.1
-EOF
-        cat $file_name
-    fi
-    return 0
-}
 
 
 echo "---------------函数开始执行---------------"

@@ -51,7 +51,7 @@ function check_container() {
     fi
 }
 
-function create_foler() {
+function create_folder() {
     if [[ -n "$1" ]]; then
         echo "3、删除文件夹，执行命令：sudo rm -rf ${path}"
         sudo rm -rf ${path}
@@ -123,7 +123,7 @@ function reset_container() {
     fi
 }
 
-function checkt_container_status() {
+function check_container_status() {
     echo "6、查看容器[${image_name}]状态，执行命令：docker inspect --format='{{.State.Status}}' ${image_alias}"
     status=$(docker inspect --format='{{.State.Status}}' ${image_alias})
     if [ "${status}" == "running" ]; then
@@ -144,8 +144,8 @@ echo "---------------函数开始执行---------------"
 get_os_path
 check_image $1 $2
 check_container $1
-create_foler $1
+create_folder $1
 create_file
 reset_container $1
-checkt_container_status
+check_container_status
 echo "---------------函数执行完毕---------------"

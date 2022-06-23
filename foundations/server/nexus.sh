@@ -4,12 +4,12 @@
 #$2 是传递给该shell脚本的第二个参数，即镜像容器的判断依据
 
 current_name="${USER}"
-image_name="easysoft/zentao:latest"
-image_alias="zentao"
+image_name="sonatype/nexus3"
+image_alias="nexus3"
 container_exist=$(docker ps -a | grep ${image_name})
 sub_image_name=${image_name%:*}
 # 准确查找镜像是否已经存在
-image_exist=$(docker images --all | grep -w ^$sub_image_name)
+image_exist=$(docker images --all | grep -w ^$sub_image_name)·
 
 function get_os_path() {
     if [ "$(uname)" == "Darwin" ]; then
@@ -26,13 +26,13 @@ function check_image() {
         echo "1、删除镜像[${image_name}]，该操作用于环境调试"
         docker stop ${image_alias} && docker rm ${image_alias} && docker rmi ${image_name} && exit 1
     elif [[ -n "$1" ]]; then
-        echo "1、镜像已存在[${image_name}]，不执行操作"
+        echo "1、镜像[${image_name}]，不执行操作"
     else
         if [ -z "${image_exist}" ]; then
-            echo "1、镜像不存在[${image_exist}]，执行命令：docker pull ${image_name}"
+            echo "1、检查镜像[${image_exist}]不存在，执行命令：docker pull ${image_name}"
             docker pull ${image_name}
         else
-            echo "1、镜像已存在[${image_name}]，不需要拉取镜像"
+            echo "1、检查镜像[${image_name}]已存在，不需要拉取镜像"
         fi
     fi
 }
@@ -46,13 +46,13 @@ function create_folder() {
     if [ -d "${path}" ]; then
         echo "2、文件夹已存在[${path}]，不执行操作"
     else
-        echo "2.1、创建文件夹，执行命令：sudo mkdir -p -v ${path}/{zentaopms,mysqldata} "
-        echo "2.2、授权文件夹，执行命令：sudo chown -R ${current_name} ${path}/{zentaopms,mysqldata} "
+        echo "2.1、创建文件夹，执行命令：sudo mkdir -p -v ${path}/{nexus-data,logs} "
+        echo "2.2、授权文件夹，执行命令：sudo chown -R ${current_name} ${path}/{nexus-data,logs} "
         if [[ "$(uname)" == "Darwin" || "$(expr substr $(uname -s) 1 10)" == "Linux" ]]; then
-            sudo mkdir -p -v ${path}/{zentaopms,mysqldata} &&
-                sudo chown -R ${current_name} ${path}/{zentaopms,mysqldata}
+            sudo mkdir -p -v ${path}/{nexus-data,logs} &&
+                sudo chmod 777 ${path}/{nexus-data,logs}
         elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
-            mkdir -p -v ${path}/{zentaopms,mysqldata}
+            mkdir -p -v ${path}/{nexus-data,logs}
         fi
     fi
 }
@@ -71,11 +71,10 @@ function check_container() {
     else
         # 这里的参数（-z）是判断容器是否存在，不存在则执行初始化脚本
         if [[ -z "${container_exist}" ]]; then
-            echo "3、检查容器[${image_alias}]不存在，执行命令：docker run -d -p 38080:80 -p 33306:3306 -e MYSQL_ROOT_PASSWORD=zentao123456 -v ${path}/zentaopms:/www/zentaopms -v ${path}/mysqldata:/var/lib/mysql --name ${image_alias} ${image_name}"
-            docker run -d -p 38080:80 -p 33306:3306 \
-                -e MYSQL_ROOT_PASSWORD=zentao123456 \
-                -v ${path}/zentaopms:/www/zentaopms \
-                -v ${path}/mysqldata:/var/lib/mysql \
+            echo "3、检查容器[${image_alias}]不存在，执行命令：docker run -d -p 38081:8081 -p 38082:8082 -p 38083:8083 --privileged=true --restart=always -v ${path}/nexus-data:/nexus-data --name ${image_alias} ${image_name}"
+            docker run -d -p 38081:8081 -p 38082:8082 -p 38083:8083 \
+                --privileged=true --restart=always \
+                -v ${path}/nexus-data:/nexus-data \
                 --name ${image_alias} ${image_name}
         else
             echo "3、容器已存在[${image_alias}]，不执行操作"
@@ -83,7 +82,7 @@ function check_container() {
     fi
 }
 
-function checkt_container_status() {
+function check_container_status() {
     # 这里的参数（-n）是判断脚本的传递的第一个参数（"$1"）已存在
     if [[ -n "$1" ]]; then # 删除操作跳过此步骤
         return 0
@@ -123,8 +122,6 @@ get_os_path
 check_image $1 $2
 create_folder $1
 check_container $1
-#create_file $1
+check_container_status $1
 delete_folder $1
-checkt_container_status $1
-
 echo "---------------函数执行完毕---------------"

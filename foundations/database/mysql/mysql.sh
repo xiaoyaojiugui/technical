@@ -4,8 +4,8 @@
 #$2 是传递给该shell脚本的第二个参数，即镜像容器的判断依据
 
 current_name="${USER}"
-image_name="easysoft/zentao:latest"
-image_alias="zentao"
+image_name="mysql:5.7.25"
+image_alias="mysql"
 container_exist=$(docker ps -a | grep ${image_name})
 sub_image_name=${image_name%:*}
 # 准确查找镜像是否已经存在
@@ -46,13 +46,13 @@ function create_folder() {
     if [ -d "${path}" ]; then
         echo "2、文件夹已存在[${path}]，不执行操作"
     else
-        echo "2.1、创建文件夹，执行命令：sudo mkdir -p -v ${path}/{zentaopms,mysqldata} "
-        echo "2.2、授权文件夹，执行命令：sudo chown -R ${current_name} ${path}/{zentaopms,mysqldata} "
+        echo "2.1、创建文件夹，执行命令：sudo mkdir -p -v ${path}/{data,logs,conf} "
+        echo "2.2、授权文件夹，执行命令：sudo chown -R ${current_name} ${path}/{data,logs,conf} "
         if [[ "$(uname)" == "Darwin" || "$(expr substr $(uname -s) 1 10)" == "Linux" ]]; then
-            sudo mkdir -p -v ${path}/{zentaopms,mysqldata} &&
-                sudo chown -R ${current_name} ${path}/{zentaopms,mysqldata}
+            sudo mkdir -p -v ${path}/{data,logs,conf} &&
+                sudo chown -R ${current_name} ${path}/{data,logs,conf}
         elif [ "$(expr substr $(uname -s) 1 10)" == "MINGW64_NT" ]; then
-            mkdir -p -v ${path}/{zentaopms,mysqldata}
+            mkdir -p -v ${path}/{data,logs,conf}
         fi
     fi
 }
@@ -71,11 +71,13 @@ function check_container() {
     else
         # 这里的参数（-z）是判断容器是否存在，不存在则执行初始化脚本
         if [[ -z "${container_exist}" ]]; then
-            echo "3、检查容器[${image_alias}]不存在，执行命令：docker run -d -p 38080:80 -p 33306:3306 -e MYSQL_ROOT_PASSWORD=zentao123456 -v ${path}/zentaopms:/www/zentaopms -v ${path}/mysqldata:/var/lib/mysql --name ${image_alias} ${image_name}"
-            docker run -d -p 38080:80 -p 33306:3306 \
-                -e MYSQL_ROOT_PASSWORD=zentao123456 \
-                -v ${path}/zentaopms:/www/zentaopms \
-                -v ${path}/mysqldata:/var/lib/mysql \
+            echo "3、检查容器[${image_alias}]不存在，执行命令：docker run -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root --name -v ${path}/conf/:/etc/mysql/conf.d/ -v ${path}/data:/var/lib/mysql -v ${path}/logs:/var/log/mysql ${image_alias} ${image_name}"
+            docker run -d -p 3306:3306 \
+                -d --restart=always \
+                --privileged=true -e MYSQL_ROOT_PASSWORD=root \
+                -v ${path}/conf/:/etc/mysql/conf.d/ \
+                -v ${path}/data:/var/lib/mysql \
+                -v ${path}/logs:/var/log/mysql \
                 --name ${image_alias} ${image_name}
         else
             echo "3、容器已存在[${image_alias}]，不执行操作"
@@ -83,7 +85,40 @@ function check_container() {
     fi
 }
 
-function checkt_container_status() {
+# 将配置写到文件中
+function create_file() {
+    # 这里的参数（-n）是判断脚本的传递的第一个参数（"$1"）已存在
+    if [[ -n "$1" ]]; then # 删除操作跳过此步骤
+        return 0
+    fi
+
+    if [[ -z "${container_exist}" ]]; then
+        file_name="${path}/conf/my.cnf"
+        if [[ -f ${file_name} ]]; then
+            echo "4、文件已存在["${file_name}"]"
+        else
+            touch ${file_name}
+            echo "4、创建文件my.cnf并将配置写到文件中["${file_name}"]"
+            cat >${file_name} <<EOF
+# Default MySQL server config
+[mysqld]
+character-set-server = utf8
+explicit_defaults_for_timestamp = 1
+bulk_insert_buffer_size = 120M
+explicit_defaults_for_timestamp = 1
+
+[client]
+default-character-set = utf8
+
+[mysqldump]
+max_allowed_packet = 1024M
+EOF
+            cat ${file_name}
+        fi
+    fi
+}
+
+function check_container_status() {
     # 这里的参数（-n）是判断脚本的传递的第一个参数（"$1"）已存在
     if [[ -n "$1" ]]; then # 删除操作跳过此步骤
         return 0
@@ -123,8 +158,8 @@ get_os_path
 check_image $1 $2
 create_folder $1
 check_container $1
-#create_file $1
-delete_folder $1
-checkt_container_status $1
+create_file $1
+# delete_folder $1
+check_container_status $1
 
 echo "---------------函数执行完毕---------------"

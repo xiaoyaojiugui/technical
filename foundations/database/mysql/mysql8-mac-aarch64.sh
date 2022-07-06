@@ -4,8 +4,8 @@
 #$2 是传递给该shell脚本的第二个参数，即镜像容器的判断依据
 
 current_name="${USER}"
-image_name="mysql:5.7.25"
-image_alias="mysql"
+image_name="mysql/mysql-server:latest"
+image_alias="mysql8"
 container_exist=$(docker ps -a | grep ${image_name})
 sub_image_name=${image_name%:*}
 # 准确查找镜像是否已经存在
@@ -71,13 +71,14 @@ function check_container() {
     else
         # 这里的参数（-z）是判断容器是否存在，不存在则执行初始化脚本
         if [[ -z "${container_exist}" ]]; then
-            echo "3、检查容器[${image_alias}]不存在，执行命令：docker run -d -p 3306:3306 -e MYSQL_ROOT_PASSWORD=root --name -v ${path}/conf/:/etc/mysql/conf.d/ -v ${path}/data:/var/lib/mysql -v ${path}/logs:/var/log/mysql ${image_alias} ${image_name}"
-            docker run -d -p 3306:3306 \
+            echo "3、检查容器[${image_alias}]，初始化命令：docker run -d -p 3308:3306 -d --restart=always --privileged=true -e MYSQL_ROOT_PASSWORD=root -v -v ${path}/conf/:/etc/mysql/conf.d/ -v ${path}/data:/var/lib/mysql -v ${path}/logs:/var/log/mysql -v /etc/localtime:/etc/localtime --name ${image_alias} ${image_name}"
+            docker run -d -p 3308:3306 \
                 -d --restart=always \
                 --privileged=true -e MYSQL_ROOT_PASSWORD=root \
                 -v ${path}/conf/:/etc/mysql/conf.d/ \
                 -v ${path}/data:/var/lib/mysql \
                 -v ${path}/logs:/var/log/mysql \
+                -v /etc/localtime:/etc/localtime \
                 --name ${image_alias} ${image_name}
         else
             echo "3、容器已存在[${image_alias}]，不执行操作"
@@ -118,7 +119,7 @@ EOF
     fi
 }
 
-function check_container_status() {
+function checkt_container_status() {
     # 这里的参数（-n）是判断脚本的传递的第一个参数（"$1"）已存在
     if [[ -n "$1" ]]; then # 删除操作跳过此步骤
         return 0
@@ -159,7 +160,7 @@ check_image $1 $2
 create_folder $1
 check_container $1
 create_file $1
-# delete_folder $1
-check_container_status $1
+delete_folder $1
+checkt_container_status $1
 
 echo "---------------函数执行完毕---------------"

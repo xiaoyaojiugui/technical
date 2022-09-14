@@ -4,7 +4,7 @@
 #$2 是传递给该shell脚本的第二个参数，即镜像容器的判断依据
 
 current_name="${USER}"
-image_name="nginx:1.21"
+image_name="nginx:latest"
 image_alias="nginx"
 container_exist=$(docker ps -a | grep ${image_name})
 sub_image_name=${image_name%:*}

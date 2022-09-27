@@ -1,0 +1,37 @@
+#!/usr/bin/expect
+
+# admin密码(admin_password)；mysql镜像别名(mysql_image_alias)；root密码(mysql_password)；
+set timeout 6
+set admin_password admin123456
+set mysql_image_alias [lindex $argv 0]
+set mysql_password [lindex $argv 1]
+
+# 连接命令
+spawn docker exec -it $mysql_image_alias mysql -uroot -p$mysql_password
+
+# 切换数据库实例
+expect "mysql>" { send "show databases; \r" }
+expect "mysql>" { send "use mysql; \r" }
+expect "mysql>" { send "select host, user, authentication_string, plugin from user; \r" }
+
+# 创建本地用户
+expect "mysql>" { send "create user 'admin'@'localhost' identified by '$admin_password'; \r" }
+expect "mysql>" { send "grant all privileges on *.* to 'admin'@'localhost'; \r" }
+expect "mysql>" { send "flush privileges; \r" }
+
+# 创建外网可访问用户
+expect "mysql>" { send "create user 'admin'@'%' identified by '$admin_password'; \r" }
+expect "mysql>" { send "grant all privileges on *.* to 'admin'@'%'; \r" }
+expect "mysql>" { send "flush privileges; \r" }
+
+#退出
+expect "mysql>" { send "select host, user, authentication_string, plugin from user; \r" }
+expect "mysql>" { send "exit\r" }
+
+interact
+
+
+
+
+
+

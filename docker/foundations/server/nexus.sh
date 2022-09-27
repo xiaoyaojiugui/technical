@@ -82,20 +82,6 @@ function initialize_container_for_the_first_time() {
     fi
 }
 
-function delete_container() {
-    # 这里的参数（-n）判断字符串的长度大于0时为真(串非空)
-    if [ -n "$1" ]; then
-        # 这里的参数（-n）判断字符串的长度大于0时为真(串非空)
-        if [ -z "$container_exist" ]; then
-            echo "1.5、执行容器删除操作，跳过此步骤，容器已删除[$image_alias]"
-        else
-            echo "1.5.1、执行容器删除操作，执行命令：docker stop $image_alias && docker rm $image_alias"
-            docker stop $image_alias && docker rm -f $image_alias
-            echo "1.5.2、执行容器删除操作，成功删除容器[$image_alias]"
-        fi
-    fi
-}
-
 function check_container_status() {
     if [ -n "$1" ]; then
         echo "1.4、执行容器删除操作，跳过此步骤，检查容器状态"
@@ -116,6 +102,20 @@ function check_container_status() {
 
         echo "1.4.3、查看容器详情，执行命令：docker ps | grep $image_name"
         docker ps | grep $image_name
+    fi
+}
+
+function delete_container() {
+    # 这里的参数（-n）判断字符串的长度大于0时为真(串非空)
+    if [ -n "$1" ]; then
+        # 这里的参数（-n）判断字符串的长度大于0时为真(串非空)
+        if [ -z "$container_exist" ]; then
+            echo "1.5、执行容器删除操作，跳过此步骤，容器已删除[$image_alias]"
+        else
+            echo "1.5.1、执行容器删除操作，执行命令：docker stop $image_alias && docker rm $image_alias"
+            docker stop $image_alias && docker rm -f $image_alias
+            echo "1.5.2、执行容器删除操作，成功删除容器[$image_alias]"
+        fi
     fi
 }
 

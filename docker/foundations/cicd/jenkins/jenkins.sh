@@ -44,6 +44,8 @@ function check_image() {
     elif [ -n "$1" ]; then
         echo "2.1、执行容器删除操作，跳过此步骤，删除原镜像[$image_name]"
     else
+        sub_image_name=${image_name%:*}
+        image_exist=$(docker images --all | grep -w ^$sub_image_name)
         if [ -z "$image_exist" ]; then
             echo "2.1、执行创建容器操作，检查镜像[$image_exist]不存在，执行命令：docker pull $image_name"
             docker pull $image_name
